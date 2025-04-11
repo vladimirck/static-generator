@@ -22,5 +22,10 @@ class TestTextNode(unittest.TestCase):
         #print(f"testing if {node1} and {node2} are NOT equal")
         self.assertNotEqual(node1, node2)
 
+    def test_url_none(self):
+        node1=TextNode("Text",TextType.LINK, None)
+        node2=TextNode("Text",TextType.LINK)
+        self.assertEqual(node1,node2)
+
 if __name__ == "__main__":
     unittest.main()
