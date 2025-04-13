@@ -9,7 +9,7 @@ class TextType(Enum):
     IMAGE = 5
 
 TEXT_TYPE_STRING = {
-    TextType.NORMAL: "normal texto",
+    TextType.NORMAL: "normal text",
     TextType.BOLD: "bold text",
     TextType.ITALIC: "italic text",
     TextType.CODE: "code text",
@@ -28,7 +28,4 @@ class TextNode:
     
     def __repr__(self):
         return f"TextNode({self.text}, {TEXT_TYPE_STRING[self.text_type]}, {self.url})"
-    
-
-
     
