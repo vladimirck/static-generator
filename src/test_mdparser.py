@@ -871,6 +871,11 @@ Block 2 line 2 \t\n\n\t Block 3 \t"""
         block = "> This is a quote."
         self.assertEqual(BlockType.QUOTE, block_to_block_type(block))
 
+    def test_quote_block_multi_line_with_one_empty(self):
+        """Prueba la identificación de una cita de una línea."""
+        block = """> A fist line\n> A second line\n>\n> Last line."""
+        self.assertEqual(BlockType.QUOTE, block_to_block_type(block))
+
     def test_quote_block_multi_line(self):
         """Prueba la identificación de una cita de múltiples líneas."""
         block = "> First line.\n> Second line.\n> Third line."
@@ -1085,3 +1090,82 @@ Final code snippet
                          '</div>')
         self.maxDiff = None
         self.assertEqual(expected_html, html)
+
+    def test_simple_h1(self):
+        """Prueba un encabezado H1 simple."""
+        md = "# Hello"
+        expected = "Hello"
+        self.assertEqual(expected, extract_title(md))
+
+    def test_h1_with_leading_trailing_spaces_line(self):
+        """Prueba un H1 con espacios antes y después en la línea."""
+        md = "\n\t# Hello \t"
+        expected = "Hello"
+        self.assertEqual(expected, extract_title(md))
+
+    def test_h1_with_leading_trailing_spaces_title(self):
+        """Prueba un H1 con espacios extra alrededor del texto del título."""
+        md = "#   Hello World   "
+        expected = "Hello World"
+        self.assertEqual(expected, extract_title(md))
+
+    def test_h1_buried_in_text(self):
+        """Prueba un H1 que no está en la primera línea."""
+        md = "Some introductory text.\n\n# The Actual Title\n\nMore text."
+        expected = "The Actual Title"
+        self.assertEqual(expected, extract_title(md))
+
+    def test_multiple_h1_returns_first(self):
+        """Prueba que devuelve el primer H1 si hay varios."""
+        md = "Text\n# First Title\nMore text\n# Second Title"
+        expected = "First Title"
+        self.assertEqual(expected, extract_title(md))
+
+    def test_empty_title_h1(self):
+        """Prueba un H1 válido pero sin texto (solo '# ')."""
+        md = "# "
+        with self.assertRaisesRegex(ValueError, "No level 1 heading found"):
+            extract_title(md)
+
+    def test_h2_raises_error(self):
+        """Prueba que un H2 (##) no es detectado y lanza ValueError."""
+        md = "## Not an H1 Title"
+        # Verifica que la función extract_title(md) lanza un ValueError
+        with self.assertRaisesRegex(ValueError, "No level 1 heading found"):
+            extract_title(md)
+            
+    def test_h3_raises_error(self):
+        """Prueba que un H3 (###) no es detectado y lanza ValueError."""
+        md = "### Not an H1 Title"
+        with self.assertRaisesRegex(ValueError, "No level 1 heading found"):
+            extract_title(md)
+
+    def test_no_headings_raises_error(self):
+        """Prueba que texto sin ningún encabezado lanza ValueError."""
+        md = "This is just plain text.\nNo headings here."
+        with self.assertRaisesRegex(ValueError, "No level 1 heading found"):
+            extract_title(md)
+
+    def test_text_starting_with_hash_but_not_h1_raises_error(self):
+        """Prueba texto que empieza con # pero no es H1 (falta espacio)."""
+        md = "#NotATitle\nSome other text"
+        with self.assertRaisesRegex(ValueError, "No level 1 heading found"):
+            extract_title(md)
+            
+    def test_empty_string_raises_error(self):
+        """Prueba que un string vacío lanza ValueError."""
+        md = ""
+        with self.assertRaisesRegex(ValueError, "No level 1 heading found"):
+            extract_title(md)
+
+    def test_only_whitespace_string_raises_error(self):
+        """Prueba que un string con solo espacios/saltos de línea lanza ValueError."""
+        md = "\n  \t \n"
+        with self.assertRaisesRegex(ValueError, "No level 1 heading found"):
+            extract_title(md)
+            
+    def test_h1_followed_by_h2(self):
+        """Prueba que encuentra el H1 incluso si hay otros encabezados después."""
+        md = "Intro\n# The Main Title\n## A Subtitle\nMore text."
+        expected = "The Main Title"
+        self.assertEqual(expected, extract_title(md))

@@ -4,6 +4,9 @@ from parentnode import ParentNode
 from htmlnode import HTMLNode
 import re
 from enum import Enum
+import os
+from pathlib import Path
+
 
 class BlockType(Enum):
     PARAGRAPH = 0
@@ -163,6 +166,8 @@ def block_to_block_type(MDBlock: str) -> BlockType:
             lines = MDBlock.split("\n")
             for line in lines:
                 if line[0:2] != "> ":
+                    if line[0] == ">" and len(line) == 1:
+                        continue
                     return BlockType.PARAGRAPH
             return BlockType.QUOTE
         case "-":
@@ -237,3 +242,55 @@ def markdown_to_html_node(md_doc: str) -> HTMLNode:
     node = ParentNode("div", html_node_list)
     print(f"HTML Text: {node.to_html()}")
     return node 
+
+def extract_title(md_doc: str) -> str:
+    lines = md_doc.split("\n")
+    for line in lines:
+        striped_line = line.strip()
+        if striped_line[0:2] == "# ":
+            return striped_line[2:].strip()    
+    raise ValueError("No level 1 heading found")
+
+def generate_page(from_path: str, template_path: str, dest_path: str):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    with open(from_path) as file:
+        md_doc = file.read()
+    
+    with open(template_path) as file:
+        template_doc = file.read()
+
+    content = markdown_to_html_node(md_doc).to_html()
+
+    title = extract_title(md_doc)
+
+    html_doc = template_doc.replace("{{ Title }}", title)
+    html_doc = html_doc.replace("{{ Content }}", content)
+
+    output_file = Path(dest_path)
+    output_file.parent.mkdir(exist_ok=True, parents=True)
+
+    with open(output_file, "w") as file:
+        file.write(html_doc)
+
+def get_all_files_path(dir_path)-> list[str]:
+    files_list = []
+
+    files_current_dir = os.listdir(dir_path)
+    for file_name in files_current_dir:
+        if os.path.isdir(dir_path + "/" + file_name) == True:
+            files_list += get_all_files_path(dir_path + "/" + file_name)
+        else:
+            files_list.append(dir_path + "/" + file_name)
+
+    return files_list
+    
+
+def generate_pages_recursive(dir_path_content: str, template_path: str, dest_dir_path: str):
+    if os.path.isdir(dir_path_content) == False:
+        raise Exception("The path to the contect directory is not a directory")
+    content_files_list = get_all_files_path(dir_path_content)
+    content_dir_length = len(dir_path_content)
+    for content_file  in content_files_list:
+        tot_length = len(content_file)
+        dest_file = dest_dir_path + content_file[content_dir_length:tot_length-2] + "html"
+        generate_page(content_file, template_path, dest_file)
