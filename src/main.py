@@ -2,9 +2,11 @@ from textnode import TEXT_TYPE_STRING, TextType, TextNode
 from mdparser import *
 import os
 import shutil
+import sys
 
 STATIC_DIR = "static"
-PUBLIC_DIR = "public"
+PUBLIC_DIR = "docs"
+CONTENT_DIR = "content"
 
 
 def _logpath( path, names):
@@ -16,15 +18,20 @@ def _logpath( path, names):
 
 
 def main():
-    if os.path.exists("test") == True:
+
+    if len(sys.argv) == 2:
+        basepath = sys.argv[1]
+    else:
+        basepath = "/"
+
+    if os.path.exists(PUBLIC_DIR) == True:
         print(f"Removing the folder {PUBLIC_DIR}:")
         shutil.rmtree(PUBLIC_DIR)
         
     shutil.copytree(STATIC_DIR, PUBLIC_DIR, ignore=_logpath)
 
-    generate_pages_recursive("content", "template.html", "public")
+    generate_pages_recursive(CONTENT_DIR, "template.html", PUBLIC_DIR, basepath)
 
-
-    print(get_all_files_path("content"))
+    print (sys.argv)
 
 main()

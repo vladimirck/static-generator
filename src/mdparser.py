@@ -240,7 +240,7 @@ def markdown_to_html_node(md_doc: str) -> HTMLNode:
             case BlockType.ORDERED_LIST:
                 html_node_list.append(make_parent_node_block_list(block, "ol"))
     node = ParentNode("div", html_node_list)
-    print(f"HTML Text: {node.to_html()}")
+    #print(f"HTML Text: {node.to_html()}")
     return node 
 
 def extract_title(md_doc: str) -> str:
@@ -251,7 +251,7 @@ def extract_title(md_doc: str) -> str:
             return striped_line[2:].strip()    
     raise ValueError("No level 1 heading found")
 
-def generate_page(from_path: str, template_path: str, dest_path: str):
+def generate_page(from_path: str, template_path: str, dest_path: str, basepath: str):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     with open(from_path) as file:
         md_doc = file.read()
@@ -265,6 +265,8 @@ def generate_page(from_path: str, template_path: str, dest_path: str):
 
     html_doc = template_doc.replace("{{ Title }}", title)
     html_doc = html_doc.replace("{{ Content }}", content)
+    html_doc = html_doc.replace("href=\"/", f"href=\"{basepath}")
+    html_doc = html_doc.replace("src=\"/", f"src=\"{basepath}")
 
     output_file = Path(dest_path)
     output_file.parent.mkdir(exist_ok=True, parents=True)
@@ -285,7 +287,7 @@ def get_all_files_path(dir_path)-> list[str]:
     return files_list
     
 
-def generate_pages_recursive(dir_path_content: str, template_path: str, dest_dir_path: str):
+def generate_pages_recursive(dir_path_content: str, template_path: str, dest_dir_path: str, basepath: str):
     if os.path.isdir(dir_path_content) == False:
         raise Exception("The path to the contect directory is not a directory")
     content_files_list = get_all_files_path(dir_path_content)
@@ -293,4 +295,4 @@ def generate_pages_recursive(dir_path_content: str, template_path: str, dest_dir
     for content_file  in content_files_list:
         tot_length = len(content_file)
         dest_file = dest_dir_path + content_file[content_dir_length:tot_length-2] + "html"
-        generate_page(content_file, template_path, dest_file)
+        generate_page(content_file, template_path, dest_file, basepath)
